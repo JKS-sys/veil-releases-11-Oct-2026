@@ -77,7 +77,29 @@ Brave-style features in every Veil window:
 - **Address-bar suggestions**: a colourful panel (not the system list) that floats over the page on macOS and Windows with Open / Search / Ask Veil AI rows, your bookmarks and history with the match highlighted, and one-click AI and search engines. ↑ ↓ to move, Enter to open, Tab to complete, `@` for an engine, `?` for Veil AI.
 - **Extensions button** (puzzle piece): switch your library's extensions on or off for this identity, and open their pop-up or options page in a tab.
 
-Brave itself is not copied into Veil: brave-core is a Chromium fork of tens of gigabytes that builds to about 200 MB. Veil gives the same everyday features on the system engine, and can run Brave as an identity's engine when it is installed.
+### Brave's features, in Veil
+
+| Brave | In Veil |
+|---|---|
+| Shields: ads & trackers | ✓ built-in list + updatable lists, per-site toggle, live count (all engines) |
+| Fingerprinting protection | ✓ a different device per identity (stronger than Brave's randomising) |
+| HTTPS upgrade | ✓ http sites open over https when they can, falling back by itself |
+| Debouncing, query filtering, De-AMP | ✓ **Clean links**: utm_/fbclid/gclid… removed, Google/Facebook/YouTube/Reddit redirects skipped, AMP → the publisher |
+| Cookie consent blocking | ✓ banners hidden, scrolling given back |
+| Speedreader | ✓ **Reader view** (⋯ → Reader view): the article alone, font size and theme |
+| Night mode | ✓ per page or for every site |
+| Picture-in-picture, tab mute | ✓ ⋯ → Picture in picture / Mute this tab |
+| Playlist | ✓ ⋯ → Add to Playlist, and a Playlist page that plays direct media |
+| Brave News | ✓ **Veil News** on the New Tab: your RSS/Atom feeds, fetched by Veil, no tracking |
+| Wayback Machine prompt | ✓ a missing page offers its saved copy |
+| Private window with Tor | ✓ (Pro) |
+| Leo AI | ✓ Veil AI with local AI, GitHub Copilot and GitHub Models |
+| Brave Search & AI answers | ✓ every engine with `@shortcuts`, `?` for Veil AI |
+| Import bookmarks & history | ✓ Chrome, Brave, Edge, Vivaldi, Arc, Opera, Firefox, Safari, or an exported .html file |
+| Brave VPN | your own proxy / VPN / Tor route per identity |
+| Rewards, Wallet, Talk | left out: crypto ads, a crypto wallet and a calling service are not part of a 4 MB private browser |
+
+Brave itself is not copied into Veil: brave-core is a Chromium fork of tens of gigabytes that builds to about 200 MB. Veil rebuilds the everyday features on the system engine, and can run Brave as an identity's engine when it is installed.
 
 ## Veil AI
 
@@ -131,7 +153,7 @@ Pay with UPI, cards or net banking through Razorpay (Settings → Plans), or ent
 
 Settings → Updates (or **Veil → Check for Updates…**). Veil asks **GitHub (public)** first, then **GitHub (private)** through Veil's service, then **Cloudflare R2**. The first one that answers decides; the download falls back to the R2 copy of the same file. Every update is checked against Veil's signing key before it replaces the app.
 
-<p align="center"><img src="docs/float-light.png" width="820" alt="Address-bar suggestions floating over the page"></p>
+<p align="center"><img src="docs/float-light.png" width="820" alt="Address-bar top sites floating over the page"><br><img src="docs/float-typed-light.png" width="820" alt="Grouped suggestions floating over the page"></p>
 
 ## Privacy and problem reports
 
@@ -170,6 +192,8 @@ Real app on Linux:
 |---|---|
 | <img src="docs/real-suggestions.png" alt="Suggestions in the real app"> | <img src="docs/real-extension.png" alt="An extension running in a Built-in window"> |
 | <img src="docs/real-extensions-menu.png" alt="Extensions menu"> | <img src="docs/real-plans-tab.png" alt="Plans in a tab"> |
+| <img src="docs/real-page-tools.png" alt="Page tools"> | <img src="docs/real-reader.png" alt="Reader view"> |
+| <img src="docs/real-clean-link.png" alt="Clean link and a hidden cookie banner"> | |
 
 ## macOS DMG
 
@@ -179,7 +203,7 @@ Real app on Linux:
 
 `bash update.sh` does everything in one go: checks `.env` (names only), makes the licence key once, deploys Veil's Cloudflare Worker with its D1 database and R2 bucket `veil-11-oct-2026`, bumps the version, runs every test, builds and signs both Mac architectures, writes the notes and `latest.json`, pushes the source to the private repo `veil-11-Oct-2026` and this README to the public repo `veil-releases-11-Oct-2026`, uploads the installers to both GitHub repos and to R2 (`latest.json` last), and only then deletes the old installers from GitHub and R2. The `release` workflow builds Windows and Linux from the tag, uploads them to all three places and prunes their old files the same way.
 
-`bash update.sh --doctor` only checks; `--service` only deploys the Worker; `--dry-run` builds without publishing.
+`bash update.sh --doctor` only checks; `--service` only deploys the Worker; `--dry-run` builds without publishing; `--publish` uploads what is already built in `release/` again (each upload is retried, and a release counts as done only when GitHub lists every file).
 
 ## Build
 
@@ -194,7 +218,7 @@ On Linux you need `libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev`. `.github/wo
 
 ## Tests
 
-- **Rust** (55 tests, plus 3 end-to-end):
+- **Rust** (61 tests, plus 3 end-to-end):
   - The proxy: HTTP rewrite, SOCKS5 with auth, a wrong password gives a 502 with the reason, and HTTP upstream with Basic auth.
   - ZIP: traversal refused, CRC checked.
   - CRX3: picks the key whose hash matches the id.
