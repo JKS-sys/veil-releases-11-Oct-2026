@@ -95,6 +95,10 @@ Brave-style features in every Veil window:
 | Private window with Tor | ✓ (Pro) |
 | Leo AI | ✓ Veil AI with local AI, GitHub Copilot and GitHub Models |
 | Brave Search & AI answers | ✓ every engine with `@shortcuts`, `?` for Veil AI |
+| Install from the Chrome Web Store / Firefox Add-ons | ✓ **Add to Veil** on every extension page in a Veil window — added to your library and switched on for that identity |
+| Extension buttons & pop-ups | ✓ enabled extensions pinned in the toolbar; their pop-up floats under the button |
+| Memory Saver (tab sleeping) | ✓ background tabs sleep after 10 / 20 / 60 minutes (not while playing sound) and wake on click |
+| GPU rendering | ✓ Metal on macOS, GPU rasterisation + zero-copy on Windows, hardware acceleration always on Linux; instant Back/Forward cache |
 | Import bookmarks & history | ✓ Chrome, Brave, Edge, Vivaldi, Arc, Opera, Firefox, Safari, or an exported .html file |
 | Brave VPN | your own proxy / VPN / Tor route per identity |
 | Rewards, Wallet, Talk | left out: crypto ads, a crypto wallet and a calling service are not part of a 4 MB private browser |
@@ -193,7 +197,8 @@ Real app on Linux:
 | <img src="docs/real-suggestions.png" alt="Suggestions in the real app"> | <img src="docs/real-extension.png" alt="An extension running in a Built-in window"> |
 | <img src="docs/real-extensions-menu.png" alt="Extensions menu"> | <img src="docs/real-plans-tab.png" alt="Plans in a tab"> |
 | <img src="docs/real-page-tools.png" alt="Page tools"> | <img src="docs/real-reader.png" alt="Reader view"> |
-| <img src="docs/real-clean-link.png" alt="Clean link and a hidden cookie banner"> | |
+| <img src="docs/real-clean-link.png" alt="Clean link and a hidden cookie banner"> | <img src="docs/real-tab-sleeping.png" alt="A sleeping tab woken up"> |
+| <img src="docs/dark-extension-popup.png" alt="Extension pop-up under the toolbar"> | |
 
 ## macOS DMG
 
