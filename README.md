@@ -95,8 +95,11 @@ Brave-style features in every Veil window:
 | Private window with Tor | ✓ (Pro) |
 | Leo AI | ✓ Veil AI with local AI, GitHub Copilot and GitHub Models |
 | Brave Search & AI answers | ✓ every engine with `@shortcuts`, `?` for Veil AI |
-| Install from the Chrome Web Store / Firefox Add-ons | ✓ **Add to Veil** on every extension page in a Veil window — added to your library and switched on for that identity |
-| Extension buttons & pop-ups | ✓ enabled extensions pinned in the toolbar; their pop-up floats under the button |
+| Install from the Chrome Web Store / Firefox Add-ons | ✓ the stores' own **Add to Chrome / Add to Firefox** buttons install into Veil (the store sees a Chrome or Firefox browser, so no “Switch to Chrome” banner), plus an **Add to Veil** button — added to your library and switched on for that identity |
+| Extension buttons & pop-ups | ✓ enabled extensions pinned in the toolbar; the pop-up opens under its button, sized to its content, and knows the current tab |
+| Restore tabs after a crash or forced quit | ✓ windows and tabs come back (the front tab live, the others asleep); or Settings → “Continue where you left off” every time |
+| Tab menu, pinned tabs, reopen closed tab | ✓ right-click a tab: reload, duplicate, pin, mute, sleep, close others / to the right; ⇧⌘T reopens |
+| iCloud Passwords | ✓ on macOS: an “iCloud Passwords” identity in Brave, Chrome or Edge with Apple's helper connected (Settings → Brave features) |
 | Memory Saver (tab sleeping) | ✓ background tabs sleep after 10 / 20 / 60 minutes (not while playing sound) and wake on click |
 | GPU rendering | ✓ Metal on macOS, GPU rasterisation + zero-copy on Windows, hardware acceleration always on Linux; instant Back/Forward cache |
 | Import bookmarks & history | ✓ Chrome, Brave, Edge, Vivaldi, Arc, Opera, Firefox, Safari, or an exported .html file |
@@ -235,7 +238,8 @@ On Linux you need `libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev`. `.github/wo
   - Updates: minisign signatures from the real `tauri signer` verify; the source order is GitHub public → private → R2.
   - Extensions: content scripts, styles, locale messages and pop-up pages for the Built-in engine.
 - **Worker** (`node worker/test/worker.test.mjs`): the whole service on SQLite with Razorpay and GitHub faked — installs, problem dedupe, the owner gate, codes (unique, one computer each, revoke, lifetime), subscriptions (paid, cancelled, plan change, MRR/ARR), the webhook signature and update files.
-- **UI**: Playwright with zero page errors (every view, both themes, suggestions, extensions menu, Copilot sign-in, plans, codes, Owner Panel, updates), plus a check that every colour token is at least 4.5:1 with no pink hues.
+- **Store** (`node tests/store.mjs`): on stand-in Chrome Web Store and Firefox Add-ons pages, the store sees Chrome / Firefox, the “Switch to Chrome” banner is gone, and the store's own buttons and install API install into Veil.
+- **UI**: Playwright with zero page errors (every view, both themes, suggestions that resize with the window, extensions menu, pop-ups sized to their content under their button, the tab menu, pinned tabs, ⇧⌘T, Copilot sign-in, plans, codes, Owner Panel, updates), plus a check that every colour token is at least 4.5:1 with no pink hues.
 
 ## Sources studied
 
