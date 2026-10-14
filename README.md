@@ -7,12 +7,20 @@
 <h1 align="center">Veil</h1>
 
 <p align="center"><b>Separate identities. One private browser.</b><br>
-A 4 MB browser for macOS, Windows and Linux — every profile is its own device.</p>
+A 4 MB browser for macOS, Windows, Linux, ChromeOS and FreeBSD — every profile is its own device,<br>and Chrome and Firefox extensions run inside it the way they do in Orion.</p>
+
+<p align="center">
+  <a href="https://github.com/JKS-sys/veil-releases-11-Oct-2026"><img alt="Star Veil on GitHub" src="https://img.shields.io/github/stars/JKS-sys/veil-releases-11-Oct-2026?style=for-the-badge&logo=github&label=Star%20Veil&color=1a5bc6"></a>
+</p>
+
+> ⭐ **Like Veil? Please give it a star on GitHub** — press **Star** at the top right of this page. It takes a second, helps other people find Veil, and keeps the creator building it.
 
 <p align="center">
   <a href="https://github.com/JKS-sys/veil-releases-11-Oct-2026/releases/latest"><b>Download the latest release</b></a> ·
   <a href="#plans">Plans</a> ·
   <a href="#demos">Demos</a> ·
+  <a href="#extensions-that-work-like-orion">Extensions</a> ·
+  <a href="#platforms">Platforms</a> ·
   <a href="#screenshots">Screenshots</a>
 </p>
 
@@ -33,7 +41,7 @@ By **Jagadeesh Kumar S**, creator · [youtube.com/@JKS-sys](https://www.youtube.
 
 | | |
 |---|---|
-| App binary | **4.3 MiB** (Linux x86_64 release; the budget is 5 MiB, and `tests/size.mjs` enforces it) |
+| App binary | **4.8 MiB** (Linux x86_64 release; the budget is 5 MiB, and `tests/size.mjs` enforces it) |
 | Stack | Tauri 2 + Rust + Preact. No HTTP or ZIP crates: Veil has its own small SOCKS/HTTP proxy, ZIP reader, SHA-256 and BLAKE2b; licence and update signatures are checked with a verify-only Ed25519. |
 | Fastest engine | The **Built-in** engine is the system WebView: WebKit on macOS, Edge WebView2 on Windows, WebKitGTK on Linux. It adds no download, starts instantly and uses the least memory. |
 
@@ -43,7 +51,7 @@ Heavier engines are optional. They are downloaded once into Veil's own folder an
 
 | Engine | What runs | Extensions | Fingerprint |
 |---|---|---|---|
-| **Built-in** | System WebView, with tabs in a Veil window | Windows (WebView2): Chrome extensions run natively. macOS and Linux: each extension's page scripts and styles run through Veil's extension layer (storage, messages, i18n, pop-ups and options pages); background parts need a Chromium or Firefox identity. | Veil Shield script, plus its own data store per profile |
+| **Built-in** | System WebView, with tabs in a Veil window | **Chrome Web Store and Firefox Add-ons.** macOS and Linux: Veil's extension host runs them like Orion — background pages and service workers, pop-ups, options pages, side panels, messages and ports, storage, tabs, context menus, badges, notifications and block lists. Windows (WebView2): Chrome extensions natively. | Veil Shield script, plus its own data store per profile |
 | **Chromium** | Helium (one-click download), or an installed Brave, Thorium, Chromium, Vivaldi or BrowserOS | **Chrome Web Store** | Veil Shield, loaded as an extension in the page's main world, plus `TZ` and language |
 | **Firefox** | An installed Firefox, LibreWolf, Floorp, Waterfox or Zen | **Firefox Add-ons** | Firefox's own fingerprinting protection, plus `user.js` privacy settings |
 | **Camoufox** | Camoufox (one-click download) | **Firefox Add-ons** | Set at engine level: UA, OS, screen, WebGL, timezone, locale, geolocation and audio. It can claim any OS. |
@@ -63,6 +71,53 @@ Branded Google Chrome and Microsoft Edge (version 137 and later) ignore command-
   - Chrome extensions **keep their store id**: Veil writes the CRX's signing key into the manifest, so sync and settings work. This is tested against the real Web Store.
   - Firefox add-ons are side-loaded signed, and switched-off ones are removed again.
   - You can also install from either store directly inside a profile.
+
+## Extensions that work, like Orion
+
+Orion showed that a WebKit browser can run Chrome and Firefox extensions. Veil does the same in its Built-in windows on macOS and Linux, with an **extension host** of its own:
+
+| What extensions need | In Veil |
+|---|---|
+| Background page / MV3 service worker | runs in a hidden page per extension and identity, with that identity's cookies and route; `onInstalled`, `onStartup`, alarms |
+| Storage (`local`, `sync`, `session`) | one store per extension and identity, shared by the background, pop-up, options, side panel and content scripts, saved to disk, `onChanged` everywhere |
+| Messages and ports | `runtime.sendMessage`, `tabs.sendMessage`, `runtime.connect`, `tabs.connect`, replies with `sendResponse` or a promise |
+| Pop-up | opens under its button, sized to its content, knows the current tab; Esc or a click elsewhere closes it |
+| Options page / side panel | options open in a tab; `sidePanel` / `sidebarAction` open a panel docked to the window |
+| Tabs, windows, scripting | `tabs.query/create/update/remove/reload`, `windows.*`, `scripting.executeScript` (functions and files), `insertCSS`, `registerContentScripts`, tab events |
+| Toolbar button | badge text and colour, title, icon, `action.onClicked` when there is no pop-up |
+| Context menus | `contextMenus` items appear in Veil's right-click menu; `onClicked` goes back to the extension |
+| Notifications, downloads | desktop notifications that open Veil when clicked; `downloads.download` |
+| Blocking (`declarativeNetRequest`) | static and dynamic **block** rules by domain go into Shields, so uBlock Origin Lite and AdGuard lists block in Veil's route |
+
+Content scripts reach the host through the page title, which a site's Content Security Policy cannot block, and every call carries a secret for that extension and identity. Two things still need a real Chrome or Firefox — native messaging and blocking `webRequest` — and a Chromium or Firefox identity runs those.
+
+## One account for all the apps
+
+Sign in once in **Settings → Plans → Account** with an email code (or a password when email codes are paused). Wherever Pro was bought — the shop on [ipconfig.co.network](https://ipconfig.co.network/shop#veil), Razorpay inside Veil, a gift or activation code, the Mac App Store or the Microsoft Store builds — it is on your account, and each computer gets an **Ed25519-signed licence** bound to it. Licences work offline for up to 14 days and renew every 12 hours. Monthly and yearly Pro run on 2 computers; when you are over the limit Veil lists your computers so you can deactivate one right there. Redeem gift codes, see and cancel subscriptions, or buy on the website from the same box.
+
+## Right-click menus everywhere
+
+- **In web pages**: open links in a new tab, a background tab, a private or Tor window, or **another identity**; copy the link or a **clean link** without trackers; save or search with an image; picture in picture, loop and speed for video; search, explain, translate or read a selection aloud; Reader, Night mode, translate or summarise the page; and the items your extensions add. Shift + right-click gives the system menu.
+- **In the toolbar**: tabs (reload, duplicate, pin, mute, sleep, close others / to the right, reopen), bookmarks (open in a new tab or private window, copy, remove), the tab strip, and extension buttons (pop-up, side panel, options, switch off).
+- **In Veil's own pages**: open the browser, private and Tor windows, Veil AI, every section, updates.
+- **The Dock (macOS), taskbar (Windows) and launcher (Linux)**: new window, new tab, private and Tor windows, Veil AI, every identity, downloads, settings.
+- **Finder, Files, Dolphin, Nemo and Explorer**: right-click a file → *Open in Veil*, *Open in Veil Private Window*, *Ask Veil AI about this file*. Switch them off in Settings.
+
+## Notifications
+
+Sites that ask get Veil's own prompt; allowed sites (and extensions) show **desktop notifications**, and clicking one brings Veil to the front on that very tab. Manage the sites in Settings → Site notifications.
+
+<a id="platforms"></a>
+## Platforms
+
+| System | Download |
+|---|---|
+| macOS (Apple silicon and Intel) | `.dmg` |
+| Windows 10 and 11 (x64, ARM) | `setup.exe` |
+| Linux (x64 and ARM64) | `.deb`, `.rpm`, `.AppImage` |
+| **ChromeOS** | turn on *Linux development environment* (Settings → Advanced → Developers), then open the Linux `.deb` (x64 or ARM64) |
+| **FreeBSD** (x64) | `Veil_…_freebsd_amd64.tar.gz` — needs `pkg install webkit2-gtk_41 curl` |
+| Haiku | not yet — Veil is built on Tauri, which needs WebKitGTK, WebView2 or WKWebView, and none of them runs on Haiku. Haiku's WebPositive browser uses its own WebKit port. |
 
 ## Opening Veil = opening your browser
 
@@ -129,7 +184,7 @@ The ⧉ menu next to + opens a tab in another identity inside the same window: i
 - **Links from other apps** open where you choose: the **chooser** (a small window; keys `1`–`9`, ↑ ↓ Enter, Esc; "Always open this site here" remembers per site), a fixed identity, or a fresh Burner. A link for an identity that is already open becomes a new tab in it (Built-in window, Chromium, or Firefox).
 - **Address bar** on the Identities page: type a site or a search and pick the identity.
 - **Extensions**: switching a Chrome extension on moves the identity to Chromium; a Firefox add-on moves it to Firefox or Camoufox. Helium or Camoufox is fetched automatically the first time — so Veil works as one browser with both stores. (The system WebView itself cannot run store extensions on macOS or Linux; on Windows WebView2 runs Chrome extensions.)
-- **App icon**: Dark, Light, or Match theme (Settings → Appearance).
+- **App icon**: Light (the default), Dark, or Match theme (Settings → Appearance).
 
 ## Using it
 
@@ -154,7 +209,7 @@ The ⧉ menu next to + opens a tab in another identity inside the same window: i
 | GitHub Copilot in Veil AI, AI across all tabs, saved chats and prompts | | ✓ | ✓ |
 | Automatic weekly Shields list updates | | ✓ | ✓ |
 
-Pay with UPI, cards or net banking through Razorpay (Settings → Plans), or enter an activation code (`VEIL-XXXX-XXXX-XXXX`). A licence is signed by Veil's service, bound to one computer by an anonymous hash, checked offline, renewed daily, and keeps working for 7 days when you are offline.
+Pay with UPI, cards or net banking through Razorpay (Settings → Plans) or on the [website](https://ipconfig.co.network/shop#veil), or redeem a code. Pro lives on your account (see [One account](#one-account-for-all-the-apps)): sign in on each computer and it gets its own signed licence, checked offline and renewed every 12 hours.
 
 ## Updates
 
@@ -171,25 +226,46 @@ Problems are collected from every part of Veil — Rust panics, JavaScript error
 <a id="demos"></a>
 ## Demos
 
-**Address bar** — suggestions, `@` engines, `?` for Veil AI, and the extensions button
-<br><img src="docs/demo-address-bar.gif" width="820" alt="Address bar demo"> &nbsp; [mp4](docs/demo-address-bar.mp4)
+Each demo is recorded from Veil at 2× and plays below; click **▶ MP4** for the full-quality video.
 
-**Plans, activation code and Owner Panel**
-<br><img src="docs/demo-plans-owner.gif" width="820" alt="Plans and Owner Panel demo"> &nbsp; [mp4](docs/demo-plans-owner.mp4)
+**1. Extensions like Orion** — the extension's button shows its badge; its pop-up opens under the button, sized to its content; the extensions menu shows the background running, the side panel and options; right-click the button for more.
+<br><img src="docs/demo-extensions.webp" width="900" alt="Extensions demo"> &nbsp; [▶ MP4](docs/demo-extensions.mp4)
 
-**Veil AI** — GitHub Copilot sign-in through the browser, then a streamed answer about the page
-<br><img src="docs/demo-ai.gif" width="820" alt="Veil AI demo"> &nbsp; [mp4](docs/demo-ai.mp4)
+**2. The real app on Linux** — an extension's content script talks to its background page (the tab title shows the reply and a port echo), the pop-up reads shared storage and the current tab, then Veil's right-click menu in the page and on a tab.
+<br><img src="docs/real-app.webp" width="900" alt="Veil running on Linux"> &nbsp; [▶ MP4](docs/real-app.mp4)
 
-**The real app** (Linux, WebKitGTK): suggestions, an extension's page script running in a Built-in window, the extensions menu, its options page, and the plans opening when a Pro feature is used
-<br><img src="docs/real-app.gif" width="820" alt="Veil running on Linux">
+**3. Right-click menus** — a tab (pin it), a bookmark, the tab strip, and Veil's own pages.
+<br><img src="docs/demo-right-click.webp" width="900" alt="Right-click menus demo"> &nbsp; [▶ MP4](docs/demo-right-click.mp4)
+
+**4. Address bar and tab search** — colourful suggestions, `@` for any engine, `?` for Veil AI, and ⌄ / ⇧⌘A to search every open tab in every window.
+<br><img src="docs/demo-address-bar.webp" width="900" alt="Address bar demo"> &nbsp; [▶ MP4](docs/demo-address-bar.mp4)
+
+**5. Small windows** — as the window narrows, less-used buttons move into ⋯; nothing overlaps and nothing scrolls sideways.
+<br><img src="docs/demo-small-window.webp" width="900" alt="Small window demo"> &nbsp; [▶ MP4](docs/demo-small-window.mp4)
+
+**6. One account** — sign in with an email code; Pro appears with its plan, source, end date and computers; subscriptions with Cancel.
+<br><img src="docs/demo-account.webp" width="900" alt="Account demo"> &nbsp; [▶ MP4](docs/demo-account.mp4)
+
+**7. Veil AI** — GitHub Copilot sign-in through the browser, then a streamed answer about the page.
+<br><img src="docs/demo-ai.webp" width="900" alt="Veil AI demo"> &nbsp; [▶ MP4](docs/demo-ai.mp4)
+
+**8. Plans and the Owner Panel** — monthly and yearly Pro, then computers, subscriptions and codes.
+<br><img src="docs/demo-plans-owner.webp" width="900" alt="Plans and Owner Panel demo"> &nbsp; [▶ MP4](docs/demo-plans-owner.mp4)
 
 <a id="screenshots"></a>
 ## Screenshots
 
+Captured at 2× so the text stays sharp — click any picture for full size.
+
 | Dark | Light |
 |---|---|
+| <img src="docs/dark-identities.png" alt="Identities, dark"> | <img src="docs/light-identities.png" alt="Identities, light"> |
+| <img src="docs/dark-extension-popup.png" alt="Extension pop-up with its badge, dark"> | <img src="docs/light-extension-popup.png" alt="Extension pop-up with its badge, light"> |
+| <img src="docs/dark-tab-menu.png" alt="Tab right-click menu, dark"> | <img src="docs/light-tab-menu.png" alt="Tab right-click menu, light"> |
 | <img src="docs/dark-address-bar.png" alt="Address bar suggestions, dark"> | <img src="docs/light-address-bar.png" alt="Address bar suggestions, light"> |
-| <img src="docs/dark-plans.png" alt="Plans, dark"> | <img src="docs/light-plans.png" alt="Plans, light"> |
+| <img src="docs/dark-extensions.png" alt="Extensions, dark"> | <img src="docs/light-extensions.png" alt="Extensions, light"> |
+| <img src="docs/dark-settings.png" alt="Settings, dark"> | <img src="docs/light-settings.png" alt="Settings, light"> |
+| <img src="docs/dark-plans.png" alt="Plans and account, dark"> | <img src="docs/light-plans.png" alt="Plans and account, light"> |
 | <img src="docs/dark-ai.png" alt="AI, dark"> | <img src="docs/light-ai.png" alt="AI, light"> |
 | <img src="docs/dark-owner.png" alt="Owner Panel, dark"> | <img src="docs/light-owner.png" alt="Owner Panel, light"> |
 
@@ -201,7 +277,8 @@ Real app on Linux:
 | <img src="docs/real-extensions-menu.png" alt="Extensions menu"> | <img src="docs/real-plans-tab.png" alt="Plans in a tab"> |
 | <img src="docs/real-page-tools.png" alt="Page tools"> | <img src="docs/real-reader.png" alt="Reader view"> |
 | <img src="docs/real-clean-link.png" alt="Clean link and a hidden cookie banner"> | <img src="docs/real-tab-sleeping.png" alt="A sleeping tab woken up"> |
-| <img src="docs/dark-extension-popup.png" alt="Extension pop-up under the toolbar"> | |
+
+<p align="center">⭐ <b>If Veil is useful to you, a star on GitHub means a lot.</b> ⭐</p>
 
 ## macOS DMG
 
@@ -226,7 +303,7 @@ On Linux you need `libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev`. `.github/wo
 
 ## Tests
 
-- **Rust** (61 tests, plus 3 end-to-end):
+- **Rust** (66 tests, plus 3 end-to-end): extension host (match patterns, block-list rules, secrets), account licences (signature, computer, app, expiry),
   - The proxy: HTTP rewrite, SOCKS5 with auth, a wrong password gives a 502 with the reason, and HTTP upstream with Basic auth.
   - ZIP: traversal refused, CRC checked.
   - CRX3: picks the key whose hash matches the id.
@@ -238,9 +315,15 @@ On Linux you need `libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev`. `.github/wo
   - Updates: minisign signatures from the real `tauri signer` verify; the source order is GitHub public → private → R2.
   - Extensions: content scripts, styles, locale messages and pop-up pages for the Built-in engine.
 - **Worker** (`node worker/test/worker.test.mjs`): the whole service on SQLite with Razorpay and GitHub faked — installs, problem dedupe, the owner gate, codes (unique, one computer each, revoke, lifetime), subscriptions (paid, cancelled, plan change, MRR/ARR), the webhook signature and update files.
+- **Page scripts** (`node tests/pagejs.mjs`): the extension runtime on a real page (calls through the title, answers only with the extension's secret, storage events, i18n), Veil's right-click menu and the notification prompt.
 - **Store** (`node tests/store.mjs`): on stand-in Chrome Web Store and Firefox Add-ons pages, the store sees Chrome / Firefox, the “Switch to Chrome” banner is gone, and the store's own buttons and install API install into Veil.
 - **UI**: Playwright with zero page errors (every view, both themes, suggestions that resize with the window, extensions menu, pop-ups sized to their content under their button, the tab menu, pinned tabs, ⇧⌘T, Copilot sign-in, plans, codes, Owner Panel, updates), plus a check that every colour token is at least 4.5:1 with no pink hues.
 
 ## Sources studied
 
 Donut Browser (profile and proxy model), Camoufox (config keys), Helium, Thorium, BrowserOS, Floorp, Otter, Beaker, Browserosaurus, Kiwi, DuckDuckGo's apple-browsers, Brave and Tor. Veil runs these engines; it does not copy their code.
+
+---
+
+<p align="center">⭐ <b>Please star Veil on GitHub</b> — it helps more people find a private browser. Thank you!<br>
+<a href="https://github.com/JKS-sys/veil-releases-11-Oct-2026">github.com/JKS-sys/veil-releases-11-Oct-2026</a></p>
