@@ -41,8 +41,8 @@ By **Jagadeesh Kumar S**, creator · [youtube.com/@JKS-sys](https://www.youtube.
 
 | | |
 |---|---|
-| App binary | **4.7 MiB** (Linux x86_64 release; the budget is 5 MiB, and `tests/size.mjs` enforces it) |
-| Download | **about 2.2 MB** (the Linux .deb; the macOS and Windows installers are compressed the same way) |
+| App binary | **1.4 MiB** on Linux, ChromeOS and FreeBSD (packed with UPX before bundling, unpacked in memory at start in ~30 ms); **4.7 MiB** on macOS and Windows, where packing would break code signing or upset antivirus tools. `tests/size.mjs` enforces the 5 MiB budget. |
+| Download | **1.45 MiB** for the Linux .deb |
 | Stack | Tauri 2 + Rust + Preact. No HTTP or ZIP crates: Veil has its own small SOCKS/HTTP proxy, ZIP reader, SHA-256 and BLAKE2b; licence and update signatures are checked with a verify-only Ed25519. |
 | Fastest engine | The **Built-in** engine is the system WebView: WebKit on macOS, Edge WebView2 on Windows, WebKitGTK on Linux. It adds no download, starts instantly and uses the least memory. |
 
@@ -82,7 +82,8 @@ Orion showed that a WebKit browser can run Chrome and Firefox extensions. Veil d
 | Background page / MV3 service worker | runs in a hidden page per extension and identity, with that identity's cookies and route; `onInstalled`, `onStartup`, alarms |
 | Storage (`local`, `sync`, `session`) | one store per extension and identity, shared by the background, pop-up, options, side panel and content scripts, saved to disk, `onChanged` everywhere |
 | Messages and ports | `runtime.sendMessage`, `tabs.sendMessage`, `runtime.connect`, `tabs.connect`, replies with `sendResponse` or a promise |
-| Pop-up | opens under its button and sizes itself like Chrome (as wide as its content wants, up to 800 × 600); in a small window the whole pop-up is shown smaller instead of being cut off; knows the current tab; Esc or a click elsewhere closes it |
+| Pop-up | opens under its button and sizes itself to what is on it (as wide as its content wants, up to 800 px); when it is taller or wider than the window, the whole pop-up is shown smaller instead of scrolling or being cut off; knows the current tab; Esc or a click elsewhere closes it |
+| Options | `options_ui` pages open in a dialog under the toolbar like Chrome's (or in a tab when the extension asks); right-click an extension's button for pop-up, options, options in a tab, pop-up in a tab, side panel, unpin, store page, switch off |
 | Its own origin | every extension lives at `veil://x-<id>/` (like `chrome-extension://<id>/`), so files asked for from the root (`/pages/panel/index.js`) load and one extension can't read another's storage |
 | Requests to other sites | `fetch` and `XMLHttpRequest` (axios too) from the extension's pages reach the hosts it was granted without CORS errors, through the identity's route, with its own cookies — like Chrome |
 | Proxy and VPN extensions | `chrome.proxy.settings` (fixed servers, PAC, direct, system) switches the identity's route; the proxy's username and password come from the extension's `webRequest.onAuthRequired`; `chrome.privacy.*` settings answer |
@@ -94,21 +95,23 @@ Orion showed that a WebKit browser can run Chrome and Firefox extensions. Veil d
 | Notifications, downloads | desktop notifications that open Veil when clicked; `downloads.download` |
 | Blocking (`declarativeNetRequest`) | static and dynamic **block** rules by domain go into Shields, so uBlock Origin Lite and AdGuard lists block in Veil's route |
 
-Content scripts reach the host through the page title, which a site's Content Security Policy cannot block, and every call carries a secret for that extension and identity. Problems an extension's pages report show under it in the Extensions menu (⚠). Blocking `webRequest` still needs a real Chrome or Firefox, and a Chromium or Firefox identity runs it. **iCloud Passwords**: Apple's helper only answers Chrome and Edge, so open the iCloud Passwords identity (⋯ → iCloud Passwords) instead.
+Content scripts reach the host through the page title, which a site's Content Security Policy cannot block, and every call carries a secret for that extension and identity. Problems an extension's pages report show under it in the Extensions menu (⚠). Deleting or switching off an extension removes its toolbar button, background page, block lists and proxy in every window at once. Blocking `webRequest` still needs a real Chrome or Firefox, and a Chromium or Firefox identity runs it.
+
+**iCloud Passwords**: since macOS 15.4 Apple's helper only answers browsers on Apple's list (Chrome, Edge, Brave, Arc, Orion…), checked by code signature and Apple Team ID. Veil finds the helper and speaks its protocol; it joins the list once it is signed with an Apple Developer ID — [docs/icloud-passwords.md](docs/icloud-passwords.md) has the entry ready for Apple's repository. Until then the extension's pop-up offers **Open iCloud Passwords**, which opens the same passwords in a Brave, Chrome or Edge identity.
 
 ## One account for all the apps
 
 Sign in once in **Settings → Plans → Account** with an email code (or a password when email codes are paused). Wherever Pro was bought — the shop on [ipconfig.co.network](https://ipconfig.co.network/shop#veil), Razorpay inside Veil, a gift or activation code, the Mac App Store or the Microsoft Store builds — it is on your account, and each computer gets an **Ed25519-signed licence** bound to it. Licences work offline for up to 14 days and renew every 12 hours. Monthly and yearly Pro run on 2 computers; when you are over the limit Veil lists your computers so you can deactivate one right there. Redeem gift codes, see and cancel subscriptions, or buy on the website from the same box.
 
-**Owner Panel → Dashboard** connects Veil to the ipconfig dashboard. Veil sends `Authorization: Bearer <APPS_API_KEY or Veil's own ak_veil_… key>` — pasted once and kept in the Keychain (update.sh puts `APPS_API_KEY` from `.env` there), never shown again — or, with no key, `X-Owner` (the hash of the owner serial) + `X-App: veil`. From there: say hello and sync, stats, and every table (computers, codes, subscriptions, problems, devices, entitlements, users) with add, edit, delete, tick boxes, **Select all**, bulk actions (revoke, restore, extend, fix, note, label…) through one `POST /owner/bulk`, **Delete all** after typing `ALL <kind>`, search and export — in **16 layouts** (table, cards, board, tiles, timeline, list, compact, sheet, masonry, split, focus, kanban, gallery, mosaic, magazine, stack), remembered per table.
+**Owner Panel → Dashboard** is always connected to the ipconfig dashboard — nothing to press: on the owner's Mac Veil says hello and syncs at launch and every 30 minutes, with `X-Owner` (the hash of the owner serial) + `X-App: veil`, or `Authorization: Bearer <APPS_API_KEY or Veil's own ak_veil_… key>` when a key is set (kept in the Keychain; update.sh puts `APPS_API_KEY` from `.env` there; never shown again). From there: say hello and sync, stats, and every table (computers, codes, subscriptions, problems, devices, entitlements, users) with add, edit, delete, tick boxes, **Select all**, bulk actions (revoke, restore, extend, fix, note, label…) through one `POST /owner/bulk`, **Delete all** after typing `ALL <kind>`, search and export — in **16 layouts** (table, cards, board, tiles, timeline, list, compact, sheet, masonry, split, focus, kanban, gallery, mosaic, magazine, stack), remembered per table.
 
 ## Right-click menus everywhere
 
 - **In web pages**: open links in a new tab, a background tab, a private or Tor window, or **another identity**; copy the link or a **clean link** without trackers; save or search with an image; picture in picture, loop and speed for video; search, explain, translate or read a selection aloud; Reader, Night mode, translate or summarise the page; and the items your extensions add. Shift + right-click gives the system menu.
-- **In the toolbar**: tabs (reload, duplicate, pin, mute, sleep, close others / to the right, reopen), bookmarks (open in a new tab or private window, copy, remove), the tab strip, and extension buttons (pop-up, side panel, options, switch off).
-- **In Veil's own pages**: open the browser, private and Tor windows, Veil AI, every section, updates.
-- **The Dock (macOS), taskbar (Windows) and launcher (Linux)**: new window, new tab, private and Tor windows, Veil AI, every identity, bookmarks, history, downloads, Playlist, extensions, Network & Tor, Plans & Account, Check for Updates, settings.
-- **Finder, Files, Dolphin, Nemo and Explorer** (files and folders): *Open in Veil*, *Open in a new Veil tab*, *Open in Veil Private Window*, *… with Tor*, *Ask Veil AI about this file*, *Translate with Veil AI*, *Search the web for this name in Veil*. Switch them off in Settings.
+- **In the toolbar**: **‹ and ›** list the tab's own history (jump straight to any page, open the previous page in a new tab, duplicate, full history); **⟳** reloads all tabs, stops, zooms or clears site data; the **address bar** pastes and goes, copies the link, a clean link without trackers or a Markdown link, opens the page privately or in the Wayback Machine; tabs (reload, duplicate, pin, mute, sleep, close others / to the right, reopen), bookmarks, the tab strip, the private, Tor, history, downloads, grid, settings and ✦ AI buttons, and extension buttons.
+- **In Veil's own pages**: open the browser, private and Tor windows, a link from the clipboard, Veil AI, every section, import, theme, sounds, updates, report a problem, star Veil — in columns when the window is short, never a scroll bar.
+- **The Dock (macOS), taskbar (Windows) and launcher (Linux)**: new window, new tab, private and Tor windows, **open a link from the clipboard**, Veil AI, an **Identities** submenu, **Recently Visited** sites, bookmarks, history, downloads, Playlist, extensions, Network & Tor, Plans & Account, Check for Updates, settings.
+- **Finder, Files, Dolphin, Nemo and Explorer** (files and folders): *Open in Veil*, *Open in a new Veil tab*, *Open in Veil Private Window*, *… with Tor*, *Open in Veil Identity…*, *Ask Veil AI about this file*, *Explain with Veil AI*, *Translate with Veil AI*, *Search the web for this name in Veil*, *Copy Veil Link (file://)*. New entries install themselves after an update. Switch them off in Settings.
 
 ## Notifications
 
@@ -241,7 +244,7 @@ Each demo is recorded from Veil at 2× and plays below; click **▶ MP4** for th
 **2. The real app on Linux** — an extension's content script talks to its background page (the tab title shows the reply and a port echo), the pop-up reads shared storage and the current tab, then Veil's right-click menu in the page and on a tab.
 <br><img src="docs/real-app.webp" width="900" alt="Veil running on Linux"> &nbsp; [▶ MP4](docs/real-app.mp4)
 
-**3. Right-click menus** — a tab (pin it), a bookmark, the tab strip, and Veil's own pages.
+**3. Right-click menus** — ‹ Back lists the tab's history, ⟳ Reload and the address bar have their own menus, then a tab (pin it), a bookmark, the tab strip, and Veil's own pages.
 <br><img src="docs/demo-right-click.webp" width="900" alt="Right-click menus demo"> &nbsp; [▶ MP4](docs/demo-right-click.mp4)
 
 **4. Address bar and tab search** — colourful suggestions, `@` for any engine, `?` for Veil AI, and ⌄ / ⇧⌘A to search every open tab in every window.
@@ -259,10 +262,10 @@ Each demo is recorded from Veil at 2× and plays below; click **▶ MP4** for th
 **8. Plans and the Owner Panel** — monthly and yearly Pro, then computers, subscriptions and codes.
 <br><img src="docs/demo-plans-owner.webp" width="900" alt="Plans and Owner Panel demo"> &nbsp; [▶ MP4](docs/demo-plans-owner.mp4)
 
-**9. Owner Panel → Dashboard** — the dashboard key is checked and kept (sent as `Authorization: Bearer`), stats arrive, every code is ticked with *Select all* and revoked in one go, then the same table in cards, board, timeline, mosaic, magazine and focus layouts.
+**9. Owner Panel → Dashboard** — already connected when it opens; a dashboard key can be added instead (sent as `Authorization: Bearer`), stats arrive, every code is ticked with *Select all* and revoked in one go, then the same table in cards, board, timeline, mosaic, magazine and focus layouts.
 <br><img src="docs/demo-dashboard.webp" width="900" alt="Dashboard demo"> &nbsp; [▶ MP4](docs/demo-dashboard.mp4)
 
-**10. Real extensions in the real app** — Ghostery's panel and FastestVPN's sign-in open from their toolbar buttons on Linux, each at its own size, with nothing cut off and no sideways scrollbar.
+**10. Real extensions in the real app** — Ghostery's panel and FastestVPN's sign-in open from their toolbar buttons on Linux, each at its own size: nothing cut off, nothing to scroll.
 <br><img src="docs/real-extensions.webp" width="900" alt="Ghostery and FastestVPN pop-ups in Veil"> &nbsp; [▶ MP4](docs/real-extensions.mp4)
 
 <a id="screenshots"></a>
@@ -318,8 +321,8 @@ On Linux you need `libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev`. `.github/wo
 
 ## Tests
 
-- **Rust** (66 tests, plus 3 end-to-end): extension host (match patterns, block-list rules, secrets), account licences (signature, computer, app, expiry),
-  - The proxy: HTTP rewrite, SOCKS5 with auth, a wrong password gives a 502 with the reason, and HTTP upstream with Basic auth.
+- **Rust** (72 tests, plus 3 end-to-end): extension host (match patterns, block-list rules, secrets, proxy settings, host permissions), each tab's back/forward history, right-click actions from Finder and the Dock, native-messaging frames, dashboard key masking, account licences (signature, computer, app, expiry),
+  - The proxy: HTTP rewrite, SOCKS5 with auth, a wrong password gives a 502 with the reason, HTTP upstream with Basic auth, and an extension's proxy taking over with credentials from the extension.
   - ZIP: traversal refused, CRC checked.
   - CRX3: picks the key whose hash matches the id.
   - SHA-256 test vectors, fingerprint determinism, Camoufox env chunking, `user.js` routing, the store file kept when broken, address-bar parsing.
@@ -329,8 +332,9 @@ On Linux you need `libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev`. `.github/wo
   - Licences: Ed25519 tokens bound to one computer, and a Worker-signed licence verified by the app.
   - Updates: minisign signatures from the real `tauri signer` verify; the source order is GitHub public → private → R2.
   - Extensions: content scripts, styles, locale messages and pop-up pages for the Built-in engine.
-- **Worker** (`node worker/test/worker.test.mjs`): the whole service on SQLite with Razorpay and GitHub faked — installs, problem dedupe, the owner gate, codes (unique, one computer each, revoke, lifetime), subscriptions (paid, cancelled, plan change, MRR/ARR), the webhook signature and update files.
-- **Page scripts** (`node tests/pagejs.mjs`): the extension runtime on a real page (calls through the title, answers only with the extension's secret, storage events, i18n), Veil's right-click menu and the notification prompt.
+- **Worker** (`node worker/test/worker.test.mjs`): the whole service on SQLite with Razorpay and GitHub faked — ipconfig's pages first with Veil's only as the fallback, installs, problem dedupe, the owner gate, codes (unique, one computer each, revoke, lifetime), subscriptions (paid, cancelled, plan change, MRR/ARR), the webhook signature and update files.
+- **Page scripts** (`node tests/pagejs.mjs`): the extension runtime on a real page (calls through the title, answers only with the extension's secret, storage events, i18n), fetch and XMLHttpRequest to other sites, proxy credentials, pop-ups sized to their content, the CSP, Veil's right-click menu and the notification prompt.
+- **Small windows** (`node tests/fit.mjs`): every section and the toolbar at 7 sizes from 480×320 to 1280×780 — nothing off-window, cut off or overlapping, no sideways scrolling, no page errors.
 - **Store** (`node tests/store.mjs`): on stand-in Chrome Web Store and Firefox Add-ons pages, the store sees Chrome / Firefox, the “Switch to Chrome” banner is gone, and the store's own buttons and install API install into Veil.
 - **UI**: Playwright with zero page errors (every view, both themes, suggestions that resize with the window, extensions menu, pop-ups sized to their content under their button, the tab menu, pinned tabs, ⇧⌘T, Copilot sign-in, plans, codes, Owner Panel, updates), plus a check that every colour token is at least 4.5:1 with no pink hues.
 
