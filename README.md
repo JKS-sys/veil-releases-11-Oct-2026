@@ -41,7 +41,8 @@ By **Jagadeesh Kumar S**, creator · [youtube.com/@JKS-sys](https://www.youtube.
 
 | | |
 |---|---|
-| App binary | **4.8 MiB** (Linux x86_64 release; the budget is 5 MiB, and `tests/size.mjs` enforces it) |
+| App binary | **4.7 MiB** (Linux x86_64 release; the budget is 5 MiB, and `tests/size.mjs` enforces it) |
+| Download | **about 2.2 MB** (the Linux .deb; the macOS and Windows installers are compressed the same way) |
 | Stack | Tauri 2 + Rust + Preact. No HTTP or ZIP crates: Veil has its own small SOCKS/HTTP proxy, ZIP reader, SHA-256 and BLAKE2b; licence and update signatures are checked with a verify-only Ed25519. |
 | Fastest engine | The **Built-in** engine is the system WebView: WebKit on macOS, Edge WebView2 on Windows, WebKitGTK on Linux. It adds no download, starts instantly and uses the least memory. |
 
@@ -81,7 +82,11 @@ Orion showed that a WebKit browser can run Chrome and Firefox extensions. Veil d
 | Background page / MV3 service worker | runs in a hidden page per extension and identity, with that identity's cookies and route; `onInstalled`, `onStartup`, alarms |
 | Storage (`local`, `sync`, `session`) | one store per extension and identity, shared by the background, pop-up, options, side panel and content scripts, saved to disk, `onChanged` everywhere |
 | Messages and ports | `runtime.sendMessage`, `tabs.sendMessage`, `runtime.connect`, `tabs.connect`, replies with `sendResponse` or a promise |
-| Pop-up | opens under its button, sized to its content, knows the current tab; Esc or a click elsewhere closes it |
+| Pop-up | opens under its button and sizes itself like Chrome (as wide as its content wants, up to 800 × 600); in a small window the whole pop-up is shown smaller instead of being cut off; knows the current tab; Esc or a click elsewhere closes it |
+| Its own origin | every extension lives at `veil://x-<id>/` (like `chrome-extension://<id>/`), so files asked for from the root (`/pages/panel/index.js`) load and one extension can't read another's storage |
+| Requests to other sites | `fetch` and `XMLHttpRequest` (axios too) from the extension's pages reach the hosts it was granted without CORS errors, through the identity's route, with its own cookies — like Chrome |
+| Proxy and VPN extensions | `chrome.proxy.settings` (fixed servers, PAC, direct, system) switches the identity's route; the proxy's username and password come from the extension's `webRequest.onAuthRequired`; `chrome.privacy.*` settings answer |
+| Helper apps (native messaging) | `runtime.connectNative` / `sendNativeMessage` start the helper another browser installed (its `NativeMessagingHosts` manifest), when it allows the extension |
 | Options page / side panel | options open in a tab; `sidePanel` / `sidebarAction` open a panel docked to the window |
 | Tabs, windows, scripting | `tabs.query/create/update/remove/reload`, `windows.*`, `scripting.executeScript` (functions and files), `insertCSS`, `registerContentScripts`, tab events |
 | Toolbar button | badge text and colour, title, icon, `action.onClicked` when there is no pop-up |
@@ -89,19 +94,21 @@ Orion showed that a WebKit browser can run Chrome and Firefox extensions. Veil d
 | Notifications, downloads | desktop notifications that open Veil when clicked; `downloads.download` |
 | Blocking (`declarativeNetRequest`) | static and dynamic **block** rules by domain go into Shields, so uBlock Origin Lite and AdGuard lists block in Veil's route |
 
-Content scripts reach the host through the page title, which a site's Content Security Policy cannot block, and every call carries a secret for that extension and identity. Two things still need a real Chrome or Firefox — native messaging and blocking `webRequest` — and a Chromium or Firefox identity runs those.
+Content scripts reach the host through the page title, which a site's Content Security Policy cannot block, and every call carries a secret for that extension and identity. Problems an extension's pages report show under it in the Extensions menu (⚠). Blocking `webRequest` still needs a real Chrome or Firefox, and a Chromium or Firefox identity runs it. **iCloud Passwords**: Apple's helper only answers Chrome and Edge, so open the iCloud Passwords identity (⋯ → iCloud Passwords) instead.
 
 ## One account for all the apps
 
 Sign in once in **Settings → Plans → Account** with an email code (or a password when email codes are paused). Wherever Pro was bought — the shop on [ipconfig.co.network](https://ipconfig.co.network/shop#veil), Razorpay inside Veil, a gift or activation code, the Mac App Store or the Microsoft Store builds — it is on your account, and each computer gets an **Ed25519-signed licence** bound to it. Licences work offline for up to 14 days and renew every 12 hours. Monthly and yearly Pro run on 2 computers; when you are over the limit Veil lists your computers so you can deactivate one right there. Redeem gift codes, see and cancel subscriptions, or buy on the website from the same box.
+
+**Owner Panel → Dashboard** connects Veil to the ipconfig dashboard. Veil sends `Authorization: Bearer <APPS_API_KEY or Veil's own ak_veil_… key>` — pasted once and kept in the Keychain (update.sh puts `APPS_API_KEY` from `.env` there), never shown again — or, with no key, `X-Owner` (the hash of the owner serial) + `X-App: veil`. From there: say hello and sync, stats, and every table (computers, codes, subscriptions, problems, devices, entitlements, users) with add, edit, delete, tick boxes, **Select all**, bulk actions (revoke, restore, extend, fix, note, label…) through one `POST /owner/bulk`, **Delete all** after typing `ALL <kind>`, search and export — in **16 layouts** (table, cards, board, tiles, timeline, list, compact, sheet, masonry, split, focus, kanban, gallery, mosaic, magazine, stack), remembered per table.
 
 ## Right-click menus everywhere
 
 - **In web pages**: open links in a new tab, a background tab, a private or Tor window, or **another identity**; copy the link or a **clean link** without trackers; save or search with an image; picture in picture, loop and speed for video; search, explain, translate or read a selection aloud; Reader, Night mode, translate or summarise the page; and the items your extensions add. Shift + right-click gives the system menu.
 - **In the toolbar**: tabs (reload, duplicate, pin, mute, sleep, close others / to the right, reopen), bookmarks (open in a new tab or private window, copy, remove), the tab strip, and extension buttons (pop-up, side panel, options, switch off).
 - **In Veil's own pages**: open the browser, private and Tor windows, Veil AI, every section, updates.
-- **The Dock (macOS), taskbar (Windows) and launcher (Linux)**: new window, new tab, private and Tor windows, Veil AI, every identity, downloads, settings.
-- **Finder, Files, Dolphin, Nemo and Explorer**: right-click a file → *Open in Veil*, *Open in Veil Private Window*, *Ask Veil AI about this file*. Switch them off in Settings.
+- **The Dock (macOS), taskbar (Windows) and launcher (Linux)**: new window, new tab, private and Tor windows, Veil AI, every identity, bookmarks, history, downloads, Playlist, extensions, Network & Tor, Plans & Account, Check for Updates, settings.
+- **Finder, Files, Dolphin, Nemo and Explorer** (files and folders): *Open in Veil*, *Open in a new Veil tab*, *Open in Veil Private Window*, *… with Tor*, *Ask Veil AI about this file*, *Translate with Veil AI*, *Search the web for this name in Veil*. Switch them off in Settings.
 
 ## Notifications
 
@@ -252,6 +259,12 @@ Each demo is recorded from Veil at 2× and plays below; click **▶ MP4** for th
 **8. Plans and the Owner Panel** — monthly and yearly Pro, then computers, subscriptions and codes.
 <br><img src="docs/demo-plans-owner.webp" width="900" alt="Plans and Owner Panel demo"> &nbsp; [▶ MP4](docs/demo-plans-owner.mp4)
 
+**9. Owner Panel → Dashboard** — the dashboard key is checked and kept (sent as `Authorization: Bearer`), stats arrive, every code is ticked with *Select all* and revoked in one go, then the same table in cards, board, timeline, mosaic, magazine and focus layouts.
+<br><img src="docs/demo-dashboard.webp" width="900" alt="Dashboard demo"> &nbsp; [▶ MP4](docs/demo-dashboard.mp4)
+
+**10. Real extensions in the real app** — Ghostery's panel and FastestVPN's sign-in open from their toolbar buttons on Linux, each at its own size, with nothing cut off and no sideways scrollbar.
+<br><img src="docs/real-extensions.webp" width="900" alt="Ghostery and FastestVPN pop-ups in Veil"> &nbsp; [▶ MP4](docs/real-extensions.mp4)
+
 <a id="screenshots"></a>
 ## Screenshots
 
@@ -268,6 +281,7 @@ Captured at 2× so the text stays sharp — click any picture for full size.
 | <img src="docs/dark-plans.png" alt="Plans and account, dark"> | <img src="docs/light-plans.png" alt="Plans and account, light"> |
 | <img src="docs/dark-ai.png" alt="AI, dark"> | <img src="docs/light-ai.png" alt="AI, light"> |
 | <img src="docs/dark-owner.png" alt="Owner Panel, dark"> | <img src="docs/light-owner.png" alt="Owner Panel, light"> |
+| <img src="docs/dark-network.png" alt="Network and Tor, dark"> | <img src="docs/light-network.png" alt="Network and Tor, light"> |
 
 Real app on Linux:
 
@@ -277,6 +291,7 @@ Real app on Linux:
 | <img src="docs/real-extensions-menu.png" alt="Extensions menu"> | <img src="docs/real-plans-tab.png" alt="Plans in a tab"> |
 | <img src="docs/real-page-tools.png" alt="Page tools"> | <img src="docs/real-reader.png" alt="Reader view"> |
 | <img src="docs/real-clean-link.png" alt="Clean link and a hidden cookie banner"> | <img src="docs/real-tab-sleeping.png" alt="A sleeping tab woken up"> |
+| <img src="docs/real-ghostery.png" alt="Ghostery's pop-up in Veil"> | <img src="docs/real-fastestvpn.png" alt="FastestVPN's pop-up in Veil"> |
 
 <p align="center">⭐ <b>If Veil is useful to you, a star on GitHub means a lot.</b> ⭐</p>
 
@@ -327,3 +342,9 @@ Donut Browser (profile and proxy model), Camoufox (config keys), Helium, Thorium
 
 <p align="center">⭐ <b>Please star Veil on GitHub</b> — it helps more people find a private browser. Thank you!<br>
 <a href="https://github.com/JKS-sys/veil-releases-11-Oct-2026">github.com/JKS-sys/veil-releases-11-Oct-2026</a></p>
+
+<!-- licence:start -->
+## Licence
+
+Veil is proprietary software — © 2026 Jagadeesh Kumar S, all rights reserved. You may run the published builds on your own computers under your plan; copying, changing or redistributing it needs written permission. See [LICENSE](LICENSE). Third-party components keep their own licences: [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).
+<!-- licence:end -->
