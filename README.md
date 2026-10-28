@@ -7,7 +7,7 @@
 <h1 align="center">Veil</h1>
 
 <p align="center"><b>Separate identities. One private browser.</b><br>
-A 4 MB browser for macOS, Windows, Linux, ChromeOS and FreeBSD — every profile is its own device,<br>and Chrome and Firefox extensions run inside it the way they do in Orion.</p>
+A small private browser for Apple silicon Macs — every profile is its own device,<br>and Chrome and Firefox extensions run inside it the way they do in Orion.</p>
 
 <p align="center">
   <a href="https://github.com/JKS-sys/veil-releases-11-Oct-2026"><img alt="Star Veil on GitHub" src="https://img.shields.io/github/stars/JKS-sys/veil-releases-11-Oct-2026?style=for-the-badge&logo=github&label=Star%20Veil&color=1a5bc6"></a>
@@ -41,8 +41,7 @@ By **Jagadeesh Kumar S**, creator · [youtube.com/@JKS-sys](https://www.youtube.
 
 | | |
 |---|---|
-| App binary | **1.4 MiB** on Linux, ChromeOS and FreeBSD (packed with UPX before bundling, unpacked in memory at start in ~30 ms); **4.7 MiB** on macOS and Windows, where packing would break code signing or upset antivirus tools. `tests/size.mjs` enforces the 5 MiB budget. |
-| Download | **1.45 MiB** for the Linux .deb |
+| App binary | under **5 MiB** on Apple silicon (`tests/size.mjs` enforces the budget) |
 | Stack | Tauri 2 + Rust + Preact. No HTTP or ZIP crates: Veil has its own small SOCKS/HTTP proxy, ZIP reader, SHA-256 and BLAKE2b; licence and update signatures are checked with a verify-only Ed25519. |
 | Fastest engine | The **Built-in** engine is the system WebView: WebKit on macOS, Edge WebView2 on Windows, WebKitGTK on Linux. It adds no download, starts instantly and uses the least memory. |
 
@@ -113,6 +112,10 @@ Sign in once in **Settings → Plans → Account** with an email code (or a pass
 - **The Dock (macOS), taskbar (Windows) and launcher (Linux)**: new window, new tab, private and Tor windows, **open a link from the clipboard**, Veil AI, an **Identities** submenu, **Recently Visited** sites, bookmarks, history, downloads, Playlist, extensions, Network & Tor, Plans & Account, Check for Updates, settings.
 - **Finder, Files, Dolphin, Nemo and Explorer** (files and folders): *Open in Veil*, *Open in a new Veil tab*, *Open in Veil Private Window*, *… with Tor*, *Open in Veil Identity…*, *Ask Veil AI about this file*, *Explain with Veil AI*, *Translate with Veil AI*, *Search the web for this name in Veil*, *Copy Veil Link (file://)*. New entries install themselves after an update. Switch them off in Settings.
 
+## Downloads
+
+Files you download from a page go to Veil's own download manager (Downloads in the sidebar, or the ⬇ button): up to **16 parallel connections** per file through the identity's own route and with the page's cookies, **pause and resume** (also after quitting Veil), a **queue** with how many run at once, a **speed limit**, **retries**, **scheduled** starts, sorting into Documents / Music / Video / Images / Archives / Programs, a notification when a file is done, its SHA-256, and Finder's *Where from*. Choose the **download folder**, or have Veil ask for every file. Paste several links at once; right-click a link, image or video → *Save* sends it there too.
+
 ## Notifications
 
 Sites that ask get Veil's own prompt; allowed sites (and extensions) show **desktop notifications**, and clicking one brings Veil to the front on that very tab. Manage the sites in Settings → Site notifications.
@@ -120,14 +123,16 @@ Sites that ask get Veil's own prompt; allowed sites (and extensions) show **desk
 <a id="platforms"></a>
 ## Platforms
 
-| System | Download |
-|---|---|
-| macOS (Apple silicon and Intel) | `.dmg` |
-| Windows 10 and 11 (x64, ARM) | `setup.exe` |
-| Linux (x64 and ARM64) | `.deb`, `.rpm`, `.AppImage` |
-| **ChromeOS** | turn on *Linux development environment* (Settings → Advanced → Developers), then open the Linux `.deb` (x64 or ARM64) |
-| **FreeBSD** (x64) | `Veil_…_freebsd_amd64.tar.gz` — needs `pkg install webkit2-gtk_41 curl` |
-| Haiku | not yet — Veil is built on Tauri, which needs WebKitGTK, WebView2 or WKWebView, and none of them runs on Haiku. Haiku's WebPositive browser uses its own WebKit port. |
+Veil is built and released for **macOS on Apple silicon** (M1 and later), macOS 12 or newer.
+
+## Install
+
+```bash
+curl -fsSL https://ipconfig.co.network/pour/install | sh
+pour install --cask veil
+```
+
+Or download `Veil_…_aarch64.dmg` from the [releases](https://github.com/JKS-sys/veil-releases-11-Oct-2026/releases). Updates arrive inside Veil (Settings → Updates) or with `pour upgrade veil`.
 
 ## Opening Veil = opening your browser
 
@@ -176,8 +181,8 @@ Brave itself is not copied into Veil: brave-core is a Chromium fork of tens of g
 ## Veil AI
 
 - **Find every AI on this computer**: Ollama, LM Studio, Jan, GPT4All, Msty, AnythingLLM, llama.cpp / llamafile / LocalAI, KoboldCpp, vLLM, text-generation-webui, plus **GitHub Copilot** (the Copilot CLI), GitHub Models (through `gh`) and any OpenAI-compatible URL with a key.
-- **GitHub Copilot with the CLI, signed in through your browser**: Veil installs the Copilot CLI (Homebrew, winget or npm), starts GitHub's sign-in, shows the one-time code and opens github.com/login/device. The same works for the GitHub CLI (GitHub Models). Copilot answers in an empty folder with no tools, so it can only answer. Models: GPT-5.4, GPT-5.3 Codex, GPT-5 mini, GPT-4.1.
-- **Install** (Homebrew on macOS, winget on Windows, the official page elsewhere), **Start**, **download models** with live progress (Llama 3.2, Qwen 2.5, Gemma 3, Phi-4 mini, Mistral, DeepSeek R1, Qwen Coder, LLaVA, or any name), **delete models**, **Use** a model, and **Uninstall** (to the Trash / winget; optionally its models too).
+- **GitHub Copilot with the CLI, signed in through your browser**: Veil installs the Copilot CLI (Pour or npm), starts GitHub's sign-in, shows the one-time code and opens github.com/login/device. The same works for the GitHub CLI (GitHub Models). Copilot answers in an empty folder with no tools, so it can only answer. Models: GPT-5.4, GPT-5.3 Codex, GPT-5 mini, GPT-4.1.
+- **Install** (with Pour), **Start**, **download models** with live progress (Llama 3.2, Qwen 2.5, Gemma 3, Phi-4 mini, Mistral, DeepSeek R1, Qwen Coder, LLaVA, or any name), **delete models**, **Use** a model, and **Uninstall** (to the Trash / winget; optionally its models too).
 - **The Veil AI window** (✦ in the toolbar, ⌘J) reads the tab in front: Summarise, Key points, Explain simply, Explain selection, Translate (11 languages), Fact-check, Draft a reply, Table, Explain code — or ask anything. Replies stream in, with coloured headings, lists and code (brackets coloured by depth).
 - **Rewrite the selection**: Formal, Friendly, Shorter, Fix grammar, Bullet points, Simpler words.
 - **All tabs at once** (Pro): Summarise all tabs, Compare tabs (a table and a pick), Research notes.
@@ -304,7 +309,7 @@ Real app on Linux:
 
 ## Release (creator)
 
-`bash update.sh` does everything in one go: checks `.env` (names only), makes the licence key once, deploys Veil's Cloudflare Worker with its D1 database and R2 bucket `veil-11-oct-2026`, bumps the version, runs every test, builds and signs both Mac architectures, writes the notes and `latest.json`, pushes the source to the private repo `veil-11-Oct-2026` and this README to the public repo `veil-releases-11-Oct-2026`, uploads the installers to both GitHub repos and to R2 (`latest.json` last), and only then deletes the old installers from GitHub and R2. The `release` workflow builds Windows and Linux from the tag, uploads them to all three places and prunes their old files the same way.
+`bash update.sh` does everything in one go: checks `.env` (names only), makes the licence key once, deploys Veil's Cloudflare Worker (records in the ipconfig dashboard's databases `veil-28-oct-2026` and `veil-kv-28-oct-2026`; R2 bucket `veil-11-oct-2026` for downloads), bumps the version, runs every test, builds and signs the Apple silicon app, writes the notes and `latest.json`, pushes the source to the private repo `veil-11-Oct-2026` and this README to the public repo `veil-releases-11-Oct-2026`, uploads the installers to both GitHub repos and to R2 (`latest.json` last), and only then deletes the old installers from GitHub and R2.
 
 `bash update.sh --doctor` only checks; `--service` only deploys the Worker; `--dry-run` builds without publishing; `--publish` uploads what is already built in `release/` again (each upload is retried, and a release counts as done only when GitHub lists every file).
 
@@ -317,7 +322,7 @@ npm run dev            # UI with demo data in a normal browser (never live endpo
 node tests/ui.mjs      # Playwright over every view, both themes, under the app's CSP
 ```
 
-On Linux you need `libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev`. `.github/workflows/build.yml` builds macOS (arm64 and x64), Windows, and Linux (x64 and ARM64).
+Releases are built on an Apple silicon Mac only.
 
 ## Tests
 

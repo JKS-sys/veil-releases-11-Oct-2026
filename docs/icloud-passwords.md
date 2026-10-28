@@ -42,3 +42,24 @@ windows after the release that includes it.
 
 ⋯ → **iCloud Passwords** (or the button in the extension's pop-up) opens your passwords in a
 Brave, Chrome or Edge identity — the same iCloud Keychain, one click.
+
+## Passkeys and passwords like Safari (no six-digit code)
+
+The code the iCloud Passwords extension asks for is Apple's pairing step for browser
+extensions; Safari never asks because it reads iCloud Keychain itself. A browser that is not
+Safari gets the same thing from Apple in two pieces, both tied to an Apple Developer account:
+
+1. **Passkeys** — the *Web Browser Public Key Credential* entitlement
+   (`com.apple.developer.web-browser.public-key-credential`). The Account Holder requests it
+   with Apple's dedicated form (linked from the entitlement's documentation page). Once Apple
+   grants it, download the provisioning profile for `network.co.ipconfig.veil`, put its path in
+   `.env` as `APPLE_PROVISION_PROFILE`, and `update.sh` adds the entitlement and embeds the
+   profile (`scripts/mac-config.mjs`). WebKit then offers iCloud Keychain passkeys on sign-in
+   pages without any code. Without the profile the entitlement is left out on purpose — macOS
+   refuses to start an app that claims a restricted entitlement it wasn't granted.
+2. **Passwords** — Apple's list above (Team ID + signature). On the list, the iCloud Passwords
+   extension in Veil pairs once per session like it does in Chrome.
+
+Both need the Developer ID that Apple is still issuing for this account; nothing in Veil has to
+change when it arrives except the two `.env` values (`MAC_SIGN_IDENTITY` → the Developer ID,
+`APPLE_PROVISION_PROFILE`).
