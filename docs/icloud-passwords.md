@@ -8,12 +8,15 @@ file `quirks/web-browser-extension-distribution-information.json` (Orion, Arc, B
 Edge, Vivaldi… got in that way).
 
 Veil already speaks the extension's native-messaging protocol and finds the helper. What it
-still needs is a place on that list, and the list needs a Team ID, which only an
-**Apple Developer ID** certificate gives (the `APPLE_*` keys in `.env` are empty today).
+still needs is a place on that list, and the list needs a Team ID — which the Developer ID
+certificate now gives: `update.sh` signs, notarises and staples Veil with it whenever
+`APPLE_SIGN_IDENTITY` (plus a notarisation login) is in `.env` and the certificate is in the
+Mac's keychain.
 
 ## Once Veil is signed with a Developer ID
 
-1. Sign and notarise the macOS build (`npm run apple-sign`, run by `update.sh`).
+1. Release once with the Developer ID (`bash update.sh` — it says "Developer ID release: signed,
+   notarised and stapled"). macOS asks for Veil's permissions one more time after that update.
 2. Read the Team ID: `codesign -dv /Applications/Veil.app 2>&1 | grep TeamIdentifier`.
 3. Open a pull request on apple/password-manager-resources adding this entry to
    `web_browsers` (fill in the Team ID):
@@ -52,14 +55,15 @@ Safari gets the same thing from Apple in two pieces, both tied to an Apple Devel
 1. **Passkeys** — the *Web Browser Public Key Credential* entitlement
    (`com.apple.developer.web-browser.public-key-credential`). The Account Holder requests it
    with Apple's dedicated form (linked from the entitlement's documentation page). Once Apple
-   grants it, download the provisioning profile for `network.co.ipconfig.veil`, put its path in
-   `.env` as `APPLE_PROVISION_PROFILE`, and `update.sh` adds the entitlement and embeds the
-   profile (`scripts/mac-config.mjs`). WebKit then offers iCloud Keychain passkeys on sign-in
+   grants it, make a **Developer ID** provisioning profile for the App ID `network.co.ipconfig.veil`
+   with that capability (developer.apple.com → Certificates, IDs & Profiles), put its path in
+   `.env` as `VEIL_PROVISION_PROFILE`, and `update.sh` adds the entitlement and embeds the
+   profile (`scripts/mac-config.mjs` only uses a profile that names Veil's app id). WebKit then offers iCloud Keychain passkeys on sign-in
    pages without any code. Without the profile the entitlement is left out on purpose — macOS
    refuses to start an app that claims a restricted entitlement it wasn't granted.
 2. **Passwords** — Apple's list above (Team ID + signature). On the list, the iCloud Passwords
    extension in Veil pairs once per session like it does in Chrome.
 
-Both need the Developer ID that Apple is still issuing for this account; nothing in Veil has to
-change when it arrives except the two `.env` values (`MAC_SIGN_IDENTITY` → the Developer ID,
-`APPLE_PROVISION_PROFILE`).
+What only Apple can do: grant the passkey entitlement, and merge the list entry. Veil's side is
+ready for both. Until the list entry ships in a macOS update, the iCloud Passwords extension
+keeps asking for its code (Apple's pairing step) — that is decided by macOS, not by Veil.
